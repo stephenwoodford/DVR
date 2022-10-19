@@ -9,11 +9,10 @@ open class Session: URLSession {
     }
 
     open var outputDirectory: String
-    public let cassetteName: String
+    public let cassetteURL: URL?
     public let backingSession: URLSession
     open var recordingEnabled = true
 
-    private let testBundle: Bundle
     private let headersToCheck: [String]
 
     private var recording = false
@@ -28,15 +27,18 @@ open class Session: URLSession {
 
     // MARK: - Initializers
 
-    public init(outputDirectory: String = "~/Desktop/DVR/", cassetteName: String, testBundle: Bundle = Session.defaultTestBundle!, backingSession: URLSession = URLSession.shared, headersToCheck: [String] = []) {
+    public init(outputDirectory: String = "~/Desktop/DVR/", cassetteURL: URL?, backingSession: URLSession = URLSession.shared, headersToCheck: [String] = []) {
         self.outputDirectory = outputDirectory
-        self.cassetteName = cassetteName
-        self.testBundle = testBundle
+        self.cassetteURL = cassetteURL
         self.backingSession = backingSession
         self.headersToCheck = headersToCheck
         super.init()
     }
 
+    convenience public init(outputDirectory: String = "~/Desktop/DVR/", cassetteName: String, testBundle: Bundle = Session.defaultTestBundle!, backingSession: URLSession = URLSession.shared, headersToCheck: [String] = []) {
+        let cassetteURL = testBundle.url(forResource: cassetteName, withExtension: "json")
+        self.init(outputDirectory: outputDirectory, cassetteURL: cassetteURL, backingSession: backingSession, headersToCheck: headersToCheck)
+    }
 
     // MARK: - URLSession
     
@@ -124,8 +126,8 @@ open class Session: URLSession {
     // MARK: - Internal
 
     var cassette: Cassette? {
-        guard let path = testBundle.path(forResource: cassetteName, ofType: "json"),
-            let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+        guard let cassetteURL = cassetteURL,
+            let data = try? Data(contentsOf: cassetteURL),
             let raw = try? JSONSerialization.jsonObject(with: data, options: []),
             let json = raw as? [String: Any]
         else { return nil }
@@ -209,6 +211,7 @@ open class Session: URLSession {
             }
         }
 
+        let cassetteName = cassetteURL?.deletingPathExtension().lastPathComponent ?? "cassette"
         let cassette = Cassette(name: cassetteName, interactions: interactions)
 
         // Persist

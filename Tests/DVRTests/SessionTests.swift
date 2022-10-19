@@ -13,7 +13,15 @@ class SessionTests: XCTestCase {
     let request = URLRequest(url: URL(string: "http://example.com")!)
 
     func testInit() {
-        XCTAssertEqual("example", session.cassetteName)
+        XCTAssertEqual("example.json", session.cassetteURL?.lastPathComponent)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: session.cassetteURL!.path))
+    }
+
+    func testInitWithURL() {
+        let fileURL = Bundle(for: SessionTests.self).url(forResource: "example", withExtension: "json")
+        let alternateSession = Session(cassetteURL: fileURL)
+        XCTAssertEqual("example.json", alternateSession.cassetteURL?.lastPathComponent)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: session.cassetteURL!.path))
     }
 
     func testDataTask() {
