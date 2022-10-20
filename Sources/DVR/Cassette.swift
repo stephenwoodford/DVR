@@ -24,8 +24,7 @@ struct Cassette {
             let interactionRequest = interaction.request
 
             if interactionRequest.httpMethod == request.httpMethod &&
-                interactionRequest.url == request.url &&
-                interactionRequest.hasHTTPBodyEqualToThatOfRequest(request)  {
+                interactionRequest.url == request.url {
 
                 // Overwrite the current match if the required headers are equal.
                 if match == nil ||
